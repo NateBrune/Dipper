@@ -1,0 +1,18 @@
+{
+  "name": "dipper",
+  "version": "1.0.0",
+  "description": "Arbitrage bot for paraswap",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Nate Brune",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "ethereum-unit-converter": "0.0.16",
+    "gas-price-oracle": "^0.4.0",
+    "paraswap": "^5.0.1",
+    "web3": "^1.6.0"
+  }
+}

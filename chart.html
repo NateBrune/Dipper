@@ -1,0 +1,183 @@
+<head>
+
+<!-- Load d3 source scripts -->
+  <script src="https://d3js.org/d3.v4.min.js" type="text/JavaScript"></script> 
+  <script src="https://d3js.org/colorbrewer.v1.min.js"></script>
+
+<!-- style section-->
+  <style>
+     .axis path{
+         stroke:black;
+         stroke-width:2px ;
+     }   
+
+     .axis line{
+         stroke: black;
+         stroke-width: 1.5px;
+     } 
+  
+     .axis text{
+         fill: black;
+         font-weight: bold;
+         font-size: 14px;
+         font-family:"Arial Black", Gadget, sans-serif;
+     } 
+
+     .legend text{
+         fill:  black;
+         font-family:"Arial Black", Gadget, sans-serif;
+     }
+  </style>
+  
+</head>
+
+<body onload="lineChart()">
+<!-- svg canvas-->
+  <svg width="1900" height="800" style="background-image: url('https://etc.usf.edu/presentations/backgrounds/grid/grid_04/1304m.gif');">
+  </svg>
+</body>
+<script>
+  async function lineChart() {
+    d3.csv("pricelogreadable2.csv", (data) => {
+      //set canvas margins
+      leftMargin=80
+      topMargin=0
+
+      //format the year 
+      var parseTime = d3.timeParse("%s");
+      data.forEach(function (d) {
+        d.date = parseTime(d.date);
+        d.price = +d.price;
+      });
+
+      //scale xAxis 
+      var xExtent = d3.extent(data, d => d.date);
+      var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+      width = 1900
+      var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+      height = 800
+      xScale = d3.scaleTime().domain(xExtent).range([leftMargin, width])
+
+      //scale yAxis
+      var yMax=d3.max(data,d=>d.price)
+      var yMin=d3.min(data,d=>d.price)
+      yScale = d3.scaleLinear().domain([yMin, yMax+topMargin]).range([height-70, 60])
+
+      //we will draw xAxis and yAxis next
+      //draw xAxis and xAxis label
+      xAxis = d3.axisBottom()
+          .scale(xScale)
+          
+      d3.select("svg")
+          .append("g")
+          .attr("class", "axis")
+          .attr("transform", `translate(0,${height-70})`)
+          .call(xAxis)
+          .append("text")
+          .attr("x", (width+70)/2) //middle of the xAxis
+          .attr("y", "50") // a little bit below xAxis
+          .text("Time")
+
+      //yAxis and yAxis label
+      yAxis = d3.axisLeft()
+          .scale(yScale)
+          .ticks(10)
+
+      d3.select('svg')
+          .append("g")
+          .attr("class", "axis")
+          .attr("transform", `translate(${leftMargin},0)`) //use variable in translate
+          .call(yAxis)
+          .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("x", ((height/2) * -1) + 100)
+          .attr("y", "-65")
+          .attr("text-anchor", "end")
+          .text("Stablecoin Price")
+      
+      //use .nest()function to group data so the line can be computed for each group
+      var sumstat = d3.nest() 
+          .key(d => d.ticker)
+          .entries(data);
+
+      console.log(sumstat)
+
+      //set color pallete for different vairables
+      var coinName = sumstat.map(d => d.key) 
+      var color = d3.scaleOrdinal().domain(coinName).range(colorbrewer.Set2[6])
+
+      //select path - three types: curveBasis,curveStep, curveCardinal
+      d3.select("svg")
+          .selectAll(".line")
+          .append("g")
+          .attr("class", "line")
+          .data(sumstat)
+          .enter()
+          .append("path")
+          .attr("d", function (d) {
+              console.log(d.price)
+              return d3.line()
+                  .x(d => xScale(d.date))
+                  .y(d => yScale(d.price)).curve(d3.curveStep)
+                  (d.values)
+          })
+          .attr("fill", "none")
+          .attr("stroke", d => color(d.key))
+          .attr("stroke-width", 2)
+
+      
+      //append circle if above 1
+        d3.select("svg")
+          .selectAll("circle")
+          .append("g")
+          .data(data)
+          .enter()
+          .append("circle")
+          .attr("r", d => {if(d.price > 1.00002){return 5}else{return 0}})
+          .attr("cx", d => xScale(d.date))
+          .attr("cy", d => yScale(d.price))
+          .style("fill", d => color(d.ticker))
+      
+       //append legends
+      var legend = d3.select("svg")
+          .selectAll('g.legend')
+          .data(sumstat)
+          .enter()
+          .append("g")
+          .attr("class", "legend");
+
+      legend.append("circle")
+          .attr("cx", width-150)
+          .attr('cy', (d, i) => i * 30 + (height-746))
+          .attr("r", 6)
+          .style("fill", d => color(d.key))
+
+      legend.append("text")
+          .attr("x", width-130)
+          .attr("y", (d, i) => i * 30 + (height-740))
+          .text(d => d.key)
+
+      //append title
+      d3.select("svg")
+          .append("text")
+          .attr("x", width/2)
+          .attr("y", 30)
+          .attr("text-anchor", "middle")
+          .text("Buying power of bot reserves over time")
+          .style("fill", "black")
+          .style("font-size", 28)
+          .style("font-family", "Arial Black")
+
+      //apend source
+      d3.select("svg")
+          .append("text")
+          .attr("x", 70)
+          .attr("y", 780)
+          .text("Source: Paraswap")
+          .style("fill", "black")
+          .style("font-size", 14)
+          .style("font-family", "Arial Black")
+          })
+        }
+</script>
+
