@@ -23,3 +23,5 @@ node app.js
 ```
 
 This will generate a verbose log into the console, as well as append to the pricelog.csv file. The pricelog is used by the chart.html to render a chart of each attempted trade. Once some data has been collected you can open chart.html in a browser to get an idea of price action of the coins you've selected.
+
+![Chart.html](screenshot.png?raw=true "I use Arch btw...")
